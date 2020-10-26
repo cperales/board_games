@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import random
 
 # Maximum of 10 players
@@ -16,17 +15,6 @@ max_players = [
     'J',
 ]
 
-# Players to play this match
-N = 6
-# Evil players
-e = 2
-# Probability of sabotage
-prob = 1
-players = max_players[:6]
-print(N, 'players in this match,', players)
-evil_players = random.sample(players, k=e)
-print('Evil players are', evil_players)
-
 s_players_round = {
     1: 2,
     2: 3,
@@ -36,12 +24,12 @@ s_players_round = {
 }
 
 
-def make_proposal(s):
+def make_proposal(players, s):
     proposal = random.sample(players, k=s)
     return proposal
 
 
-def vote_proposal(proposal):
+def vote_proposal(players, proposal):
     vote_result = 0
     for p in players:
         vote = random.randint(0, 1)
@@ -53,30 +41,35 @@ def vote_proposal(proposal):
         return False
 
 
-def mission_result(selected_players):
+def mission_result(selected_players,
+                   evil_players,
+                   prob_sab):
     mission = 0
     for p in selected_players:
         if p in evil_players:
-            if np.random.choice([0, 1], p=[1 - prob, prob]) == 1:
+            if np.random.choice([0, 1], p=[1 - prob_sab,
+                                           prob_sab]) == 1:
                 print('Evil player', p, 'sabotaged!')
                 mission = 1
     return mission
 
 
-def round(r):
+def round(r, players, evil_players, prob_sab):
     s = s_players_round[r]
     print('Round', r, ', selected', s, 'players')
-    accepted_proposal = False
-    while accepted_proposal is False:
-        proposal = make_proposal(s)
+    accepted = False
+    while accepted is False:
+        proposal = make_proposal(players, s)
         print('Proposal is', proposal)
-        accepted_proposal = vote_proposal(proposal)
-        if accepted_proposal is False:
+        accepted = vote_proposal(players, proposal)
+        if accepted is False:
             print('Proposal is denied')
         else:
             print('Proposal is accepted')
     selected_players = proposal
-    mission = mission_result(selected_players)
+    mission = mission_result(selected_players,
+                             evil_players,
+                             prob_sab)
     if mission == 0:
         print('Mission passed')
     else:
@@ -84,12 +77,33 @@ def round(r):
     return mission
 
 
-match = 0
-for r in [1, 2, 3, 4, 5]:
-    match += round(r)
-    print()
+def match(N, e, prob_sab):
+    players = max_players[:N]
+    print(N, 'players in this match,', players)
+    evil_players = random.sample(players, k=e)
+    print('Evil players are', evil_players)
 
-if match < 3:
-    print('Good players win!')
-else:
-    print('Bad players win!')
+    count_match = 0
+    for r in range(1, 5 + 1):
+        count_match += round(r, players, evil_players, prob_sab)
+        print()
+
+    if count_match < 3:
+        print('Good players win!')
+        match_result = 0
+    else:
+        print('Bad players win!')
+        match_result = 1
+
+    return match_result
+
+
+if __name__ == '__main__':
+    # Players to play this match
+    N = 6
+    # Evil players
+    e = 2
+    # Probability of sabotage
+    prob = 1
+    # Game
+    match(N, e, prob_sab=prob)
